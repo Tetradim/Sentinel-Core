@@ -41,7 +41,9 @@ body {
 }
 
 button,
-input {
+input,
+select,
+textarea {
   font: inherit;
 }
 
@@ -271,6 +273,20 @@ button {
   min-width: 0;
   padding: 14px;
 }
+
+.general-api-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.general-api-form label { display: grid; gap: 6px; color: var(--muted); font-family: "Fira Code", monospace; font-size: 10px; text-transform: uppercase; }
+.general-api-form input { width: 100%; min-height: 38px; border: 1px solid var(--line); border-radius: 4px; background: rgba(0, 0, 0, 0.34); color: var(--text); padding: 8px 10px; }
+.general-api-check { grid-column: 1 / -1; display: flex !important; flex-direction: row; align-items: center; }
+.general-api-check input { width: auto; min-height: auto; }
+.general-api-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; }
+.general-api-actions button { min-height: 38px; border: 1px solid var(--line-strong); border-radius: 4px; background: rgba(239, 174, 54, 0.09); padding: 0 14px; cursor: pointer; }
+.general-api-boundary { color: var(--muted); line-height: 1.6; }
+.general-api-boundary strong { color: var(--text); }
+.general-api-result { overflow: auto; max-height: 360px; color: var(--cyan); font: 10px/1.5 "Fira Code", monospace; white-space: pre-wrap; }
+.general-api-error { grid-column: 1 / -1; margin: 0; }
+
+@media (max-width: 760px) { .general-api-form { grid-template-columns: 1fr; } }
 
 .app-error {
   display: flex;

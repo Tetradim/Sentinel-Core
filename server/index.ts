@@ -12,6 +12,7 @@ import {
   isLocalBridgeAddress,
 } from './chromeDiscordBridge.js';
 import { evaluateOperatorAuthPolicy } from './operatorAuthPolicy.js';
+import { ArchiveGeneralApiClient, GeneralApiStore } from './generalApi.js';
 import { evaluateRelayPolicy } from './relayPolicy.js';
 import type { NextFunction, Request, Response } from 'express';
 import type {
@@ -451,6 +452,49 @@ app.use('/api', requireOperatorAccess);
 
 app.get('/api/sentinel-core/config', (_request, response) => {
   response.json(suiteConfig());
+});
+
+const generalApiStore = new GeneralApiStore();
+const generalApiClient = new ArchiveGeneralApiClient(generalApiStore);
+
+app.get('/api/general-api', (_request, response) => {
+  try {
+    response.json({ settings: generalApiStore.public(), contract: 'archive.general.v1', boundary: 'Archive replays and brokers; Sentinel Core only observes.' });
+  } catch (error) {
+    response.status(500).json({ error: error instanceof Error ? error.message : String(error) });
+  }
+});
+
+app.put('/api/general-api', (request, response) => {
+  try {
+    response.json({ settings: generalApiStore.public(generalApiStore.save(request.body || {})) });
+  } catch (error) {
+    response.status(422).json({ error: error instanceof Error ? error.message : String(error) });
+  }
+});
+
+app.post('/api/general-api/test', async (_request, response) => {
+  try {
+    response.json(await generalApiClient.test());
+  } catch (error) {
+    response.status(502).json({ error: error instanceof Error ? error.message : String(error) });
+  }
+});
+
+app.post('/api/general-api/register', async (_request, response) => {
+  try {
+    response.json(await generalApiClient.register());
+  } catch (error) {
+    response.status(502).json({ error: error instanceof Error ? error.message : String(error) });
+  }
+});
+
+app.get('/api/general-api/account', async (_request, response) => {
+  try {
+    response.json(await generalApiClient.account());
+  } catch (error) {
+    response.status(502).json({ error: error instanceof Error ? error.message : String(error) });
+  }
 });
 
 app.get('/api/sentinel-core/snapshot', async (_request, response) => {

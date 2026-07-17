@@ -1,9 +1,12 @@
-import type { SuiteConfig, SuiteSnapshot } from './types';
+import type { GeneralApiSettings, SuiteConfig, SuiteSnapshot } from './types';
 
-async function requestJson<T>(path: string): Promise<T> {
+async function requestJson<T>(path: string, options: RequestInit = {}): Promise<T> {
   const response = await fetch(path, {
+    ...options,
     headers: {
       Accept: 'application/json',
+      ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+      ...(options.headers || {}),
     },
   });
 
@@ -22,4 +25,20 @@ export function loadSuiteConfig() {
 
 export function loadSuiteSnapshot() {
   return requestJson<SuiteSnapshot>('/api/sentinel-core/snapshot');
+}
+
+export function loadGeneralApiSettings() {
+  return requestJson<{ settings: GeneralApiSettings; contract: string; boundary: string }>('/api/general-api');
+}
+
+export function saveGeneralApiSettings(settings: Record<string, unknown>) {
+  return requestJson<{ settings: GeneralApiSettings }>('/api/general-api', { method: 'PUT', body: JSON.stringify(settings) });
+}
+
+export function testGeneralApi() {
+  return requestJson<Record<string, unknown>>('/api/general-api/test', { method: 'POST', body: '{}' });
+}
+
+export function registerGeneralApi() {
+  return requestJson<Record<string, unknown>>('/api/general-api/register', { method: 'POST', body: '{}' });
 }

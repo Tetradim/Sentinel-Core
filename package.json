@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently -k -n api,ui \"tsx server/index.ts --port 8005\" \"vite --host 127.0.0.1 --port 3005\"",
-    "test": "node --import tsx --test server/serverBinding.test.ts server/chromeDiscordBridge.test.ts server/relayPolicy.test.ts server/busIngressPolicy.test.ts server/windowsInstallerBootstrap.test.ts server/operatorAuthPolicy.test.ts server/repositoryIdentity.test.ts src/botLifecycle.test.ts",
+    "test": "node --import tsx --test server/serverBinding.test.ts server/chromeDiscordBridge.test.ts server/relayPolicy.test.ts server/busIngressPolicy.test.ts server/windowsInstallerBootstrap.test.ts server/operatorAuthPolicy.test.ts server/repositoryIdentity.test.ts server/generalApi.test.ts src/botLifecycle.test.ts",
     "build": "tsc -p tsconfig.server.json && tsc -p tsconfig.json && vite build",
     "start": "node dist-server/server/index.js",
     "preview": "npm run build && npm start"

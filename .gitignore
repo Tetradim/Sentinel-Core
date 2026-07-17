@@ -5,3 +5,4 @@ dist-server/
 .env.local
 .DS_Store
 *.log
+data/general_api.json

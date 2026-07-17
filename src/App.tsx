@@ -23,11 +23,18 @@ import {
   TrendingUp,
   Zap,
 } from 'lucide-react';
-import { loadSuiteSnapshot } from './api';
+import {
+  loadGeneralApiSettings,
+  loadSuiteSnapshot,
+  registerGeneralApi,
+  saveGeneralApiSettings,
+  testGeneralApi,
+} from './api';
 import { normalizeExecutionLifecycle } from './botLifecycle';
 import type {
   AnyPayload,
   EdgeDecisionFeed,
+  GeneralApiSettings,
   PulseAccount,
   PulsePosition,
   PulseTicker,
@@ -37,7 +44,7 @@ import type {
   SuiteSnapshot,
 } from './types';
 
-type TabKey = 'matrix' | 'edge' | 'pulse' | 'trade' | 'risk' | 'strategy' | 'ops';
+type TabKey = 'matrix' | 'edge' | 'pulse' | 'trade' | 'risk' | 'strategy' | 'ops' | 'general-api';
 
 type Feature = {
   name: string;
@@ -321,6 +328,7 @@ export function App() {
     { key: 'risk', label: 'Risk', icon: <ShieldAlert size={15} />, count: `${okCount(model.riskFeatures)}/${model.riskFeatures.length}` },
     { key: 'strategy', label: 'Strategy Lab', icon: <LineChart size={15} />, count: `${okCount(model.strategyFeatures)}/${model.strategyFeatures.length}` },
     { key: 'ops', label: 'Ops', icon: <Activity size={15} />, count: `${okCount(model.opsFeatures)}/${model.opsFeatures.length}` },
+    { key: 'general-api', label: 'General API', icon: <Network size={15} />, count: 'v1' },
   ];
 
   return (
@@ -370,6 +378,7 @@ export function App() {
         {activeTab === 'risk' ? <RiskTab model={model} snapshot={snapshot} /> : null}
         {activeTab === 'strategy' ? <StrategyTab model={model} snapshot={snapshot} /> : null}
         {activeTab === 'ops' ? <OpsTab model={model} snapshot={snapshot} /> : null}
+        {activeTab === 'general-api' ? <GeneralApiTab /> : null}
       </main>
     </div>
   );
@@ -768,6 +777,99 @@ function OpsTab({ model, snapshot }: { model: ReturnType<typeof buildUiModel>; s
       </Panel>
       <Panel title="Event Journal" caption="latest sampled responses">
         <EventJournal snapshot={snapshot} />
+      </Panel>
+    </TabLayout>
+  );
+}
+
+function GeneralApiTab() {
+  const [settings, setSettings] = React.useState<GeneralApiSettings | null>(null);
+  const [token, setToken] = React.useState('');
+  const [result, setResult] = React.useState<Record<string, unknown> | null>(null);
+  const [error, setError] = React.useState('');
+  const [busy, setBusy] = React.useState(false);
+
+  const load = React.useCallback(async () => {
+    const payload = await loadGeneralApiSettings();
+    setSettings(payload.settings);
+  }, []);
+
+  React.useEffect(() => {
+    load().catch((reason) => setError(reason instanceof Error ? reason.message : String(reason)));
+  }, [load]);
+
+  function update<K extends keyof GeneralApiSettings>(key: K, value: GeneralApiSettings[K]) {
+    setSettings((current) => current ? { ...current, [key]: value } : current);
+  }
+
+  async function save() {
+    if (!settings) return false;
+    setBusy(true);
+    setError('');
+    try {
+      const { token_configured: _hidden, ...visible } = settings;
+      const payload = await saveGeneralApiSettings({ ...visible, ...(token ? { api_token: token } : {}) });
+      setSettings(payload.settings);
+      setToken('');
+      setResult(payload as unknown as Record<string, unknown>);
+      return true;
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : String(reason));
+      return false;
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function action(kind: 'test' | 'register') {
+    if (!await save()) return;
+    setBusy(true);
+    setError('');
+    try {
+      const payload = kind === 'test' ? await testGeneralApi() : await registerGeneralApi();
+      setResult(payload);
+      await load();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : String(reason));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <TabLayout
+      title="General API"
+      deck={[
+        { label: 'Contract', value: 'archive.general.v1', tone: 'good' },
+        { label: 'Role', value: 'Observer', tone: 'neutral' },
+        { label: 'Enabled', value: settings?.enabled ? 'Yes' : 'No', tone: settings?.enabled ? 'good' : 'neutral' },
+        { label: 'Token', value: settings?.token_configured ? 'Saved' : 'Missing', tone: settings?.token_configured ? 'good' : 'warn' },
+      ]}
+      aside={
+        <Panel title="Boundary" caption="decision ownership">
+          <p className="general-api-boundary"><strong>Archive replays and brokers.</strong> Sentinel Core observes the shared run. It does not create trades or trading directives.</p>
+          <pre className="general-api-result">{result ? JSON.stringify(result, null, 2) : 'Save, test, or register to see a result.'}</pre>
+        </Panel>
+      }
+    >
+      <Panel title="Archive Connection" caption="server-side private settings">
+        {settings ? (
+          <div className="general-api-form">
+            <label className="general-api-check"><input type="checkbox" checked={settings.enabled} onChange={(event) => update('enabled', event.target.checked)} /> Enable General API</label>
+            <label>Archive base URL<input value={settings.base_url} onChange={(event) => update('base_url', event.target.value)} /></label>
+            <label>Replay run ID<input value={settings.run_id} onChange={(event) => update('run_id', event.target.value)} /></label>
+            <label>Participant ID<input value={settings.participant_id} onChange={(event) => update('participant_id', event.target.value)} /></label>
+            <label>Observed symbols<input value={settings.subscribed_symbols.join(', ')} onChange={(event) => update('subscribed_symbols', event.target.value.split(',').map((value) => value.trim()).filter(Boolean))} /></label>
+            <label>Participant token<input type="password" value={token} placeholder="Leave blank to keep saved token" onChange={(event) => setToken(event.target.value)} /></label>
+            <label>Timeout seconds<input type="number" min="0.1" step="0.1" value={settings.timeout_seconds} onChange={(event) => update('timeout_seconds', Number(event.target.value))} /></label>
+            <div className="general-api-actions">
+              <button type="button" disabled={busy} onClick={save}>Save</button>
+              <button type="button" disabled={busy} onClick={() => action('test')}>Test Connection</button>
+              <button type="button" disabled={busy || !settings.run_id} onClick={() => action('register')}>Register With Run</button>
+            </div>
+            {error ? <div className="app-error general-api-error"><AlertTriangle size={16} />{error}</div> : null}
+          </div>
+        ) : <EmptyState title="Loading General API" body="Reading server-side settings." />}
       </Panel>
     </TabLayout>
   );

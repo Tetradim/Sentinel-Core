@@ -1,5 +1,21 @@
 export type ServiceTone = 'good' | 'warn' | 'bad' | 'neutral' | 'pending';
 
+export type GeneralApiSettings = {
+  enabled: boolean;
+  base_url: string;
+  run_id: string;
+  participant_id: string;
+  bot_id: string;
+  display_name: string;
+  roles: string[];
+  subscribed_symbols: string[];
+  timeout_seconds: number;
+  starting_cash: number;
+  commission_per_order: number;
+  slippage_bps: number;
+  token_configured: boolean;
+};
+
 export type ServiceResult<T> = {
   ok: boolean;
   data?: T;
