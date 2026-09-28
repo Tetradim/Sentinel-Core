@@ -432,7 +432,6 @@ function buildUiModel(snapshot: SuiteSnapshot | null) {
     { name: 'Edge Readiness', source: 'Edge', endpoint: '/api/ready', service: snapshot?.edgeReady, detail: `${failedChecks.length} failed checks`, icon: <ShieldCheck size={15} /> },
     { name: 'Edge Rate Limits', source: 'Edge', endpoint: '/api/rate-limit/status', service: snapshot?.edgeRateLimit, icon: <Gauge size={15} /> },
     { name: 'Edge Automation', source: 'Edge', endpoint: '/api/automation', service: snapshot?.edgeAutomation, icon: <SlidersHorizontal size={15} /> },
-    { name: 'Dry Run Status', source: 'Edge', endpoint: '/api/dry-run/status', service: snapshot?.edgeDryRun, icon: <ShieldQuestion size={15} /> },
     { name: 'Pulse Risk Status', source: 'Pulse', endpoint: '/api/risk/status', service: snapshot?.pulseRiskStatus, icon: <ShieldAlert size={15} /> },
     { name: 'Pulse Risk Limits', source: 'Pulse', endpoint: '/api/risk/limits', service: snapshot?.pulseRiskLimits, icon: <ListChecks size={15} /> },
     { name: 'Pulse Rate Limits', source: 'Pulse', endpoint: '/api/rate-limits', service: snapshot?.pulseRateLimits, icon: <Gauge size={15} /> },
@@ -442,8 +441,6 @@ function buildUiModel(snapshot: SuiteSnapshot | null) {
   const strategyFeatures: Feature[] = [
     { name: 'Edge Strategies', source: 'Edge', endpoint: '/api/strategies', service: snapshot?.edgeStrategies, icon: <GitBranch size={15} /> },
     { name: 'Puzzle Key', source: 'Edge', endpoint: '/api/strategies/puzzle-key/status', service: snapshot?.edgePuzzleKey, icon: <ShieldQuestion size={15} /> },
-    { name: 'Simulation Lab', source: 'Edge', endpoint: '/api/simulation-lab/status', service: snapshot?.edgeSimulationLab, icon: <LineChart size={15} /> },
-    { name: 'Backtest Runs', source: 'Edge', endpoint: '/api/backtest/runs', service: snapshot?.edgeBacktestRuns, icon: <BarChart3 size={15} /> },
     { name: 'Scanner Catalog', source: 'Edge', endpoint: '/api/scanner-workbench/catalog', service: snapshot?.edgeScannerCatalog, icon: <RadioTower size={15} /> },
     { name: 'Chart Workspace', source: 'Edge', endpoint: '/api/chart-workspace/{symbol}', detail: symbol || 'Symbol scoped', icon: <LineChart size={15} /> },
     { name: 'Pulse Strategies', source: 'Pulse', endpoint: '/api/strategies/registry', service: snapshot?.pulseStrategiesRegistry, icon: <GitBranch size={15} /> },
@@ -676,7 +673,6 @@ function RiskTab({ model, snapshot }: { model: ReturnType<typeof buildUiModel>; 
         <Panel title="Risk Flags" caption="read-only state">
           <div className="kv-stack">
             <KeyValue label="Pulse key" value={snapshot?.config.pulseKeyConfigured ? 'Configured' : 'Missing'} tone={snapshot?.config.pulseKeyConfigured ? 'good' : 'bad'} />
-            <KeyValue label="Dry run" value={statusWord(snapshot?.edgeDryRun)} tone={serviceTone(snapshot?.edgeDryRun)} />
             <KeyValue label="Automation mode" value={snapshot?.edgeAutomation.data?.settings?.mode ?? 'Unavailable'} />
             <KeyValue label="Min confidence" value={formatNumber(snapshot?.edgeAutomation.data?.settings?.min_confidence)} />
           </div>
@@ -709,7 +705,6 @@ function StrategyTab({ model, snapshot }: { model: ReturnType<typeof buildUiMode
       title="Strategy Lab"
       deck={[
         { label: 'Edge Strategies', value: serviceSummary(snapshot?.edgeStrategies), tone: serviceTone(snapshot?.edgeStrategies) },
-        { label: 'Simulation', value: statusWord(snapshot?.edgeSimulationLab), tone: serviceTone(snapshot?.edgeSimulationLab) },
         { label: 'Pulse Strategies', value: serviceSummary(snapshot?.pulseStrategiesRegistry), tone: serviceTone(snapshot?.pulseStrategiesRegistry) },
         { label: 'Replay', value: statusWord(snapshot?.pulseReplayStatus), tone: serviceTone(snapshot?.pulseReplayStatus) },
       ]}

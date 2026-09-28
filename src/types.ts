@@ -112,9 +112,6 @@ export type SuiteSnapshot = {
   edgeDecisions: ServiceResult<EdgeDecisionFeed>;
   edgeStrategies: ServiceResult<AnyPayload>;
   edgePuzzleKey: ServiceResult<AnyPayload>;
-  edgeDryRun: ServiceResult<AnyPayload>;
-  edgeSimulationLab: ServiceResult<AnyPayload>;
-  edgeBacktestRuns: ServiceResult<AnyPayload>;
   edgeScannerCatalog: ServiceResult<AnyPayload>;
   edgeConfigHash: ServiceResult<AnyPayload>;
   edgeCorrelation: ServiceResult<AnyPayload>;
